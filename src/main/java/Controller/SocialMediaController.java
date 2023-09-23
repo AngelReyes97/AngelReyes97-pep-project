@@ -3,7 +3,10 @@ package Controller;
 import io.javalin.Javalin;
 import io.javalin.http.Context;
 import Model.Account;
-import Service.AccountService;;
+import Model.Message;
+import Service.AccountService;
+import Service.MessageService;
+import java.util.List;
 
 /**
  * TODO: You will need to write your own endpoints and handlers for your controller. The endpoints you will need can be
@@ -12,9 +15,13 @@ import Service.AccountService;;
  */
 public class SocialMediaController {
     AccountService accountService;
+    MessageService messageservice;
+
     public SocialMediaController(){
         accountService = new AccountService();
+        messageservice = new MessageService();
     }
+
     /**
      * In order for the test cases to work, you will need to write the endpoints in the startAPI() method, as the test
      * suite must receive a Javalin object from this method.
@@ -24,6 +31,10 @@ public class SocialMediaController {
         Javalin app = Javalin.create();
         app.get("example-endpoint", this::exampleHandler);
         app.post("/register", this::registerUser);
+        app.post("/login", this::userLogin);
+        app.post("/messages", this::newMessage);
+        app.get("/messages", this::getMessages);
+        app.get("messages/{message_id}", this::getOneMessage);
 
         return app;
     }
@@ -59,5 +70,58 @@ public class SocialMediaController {
         }
     }
 
+    private void userLogin(Context context) {
+        Account userLogin = context.bodyAsClass(Account.class);
+        Account validUser = accountService.userLogin(userLogin);
+
+        if (validUser != null) {
+            context.json(validUser);
+            context.status(200);
+        }
+        else {
+            context.status(401);
+        }
+
+    }
+
+    private void newMessage(Context context) {
+        Message newMessage = context.bodyAsClass(Message.class);
+        Message existingUser = messageservice.existingUser(newMessage);
+
+        if (existingUser != null) {
+            if(!newMessage.getMessage_text().isBlank() && newMessage.getMessage_text().length() < 255) {
+                Message createdMessage = messageservice.createMessage(newMessage);
+                context.json(createdMessage);
+                context.status(200);
+            }
+            else {
+                context.status(400);
+            }
+        }
+        else {
+            context.status(400);
+        }
+    }
+
+    private void getMessages(Context context) {
+        List<Message> messages = messageservice.getAllMessages();
+
+            context.json(messages);
+            context.status(200); // OK
+    }
+
+    private void getOneMessage(Context context) {
+        int messageId = Integer.parseInt(context.pathParam("message_id"));
+        Message message = messageservice.getMessageById(messageId);
+
+        if (message != null) {
+            context.json(message);
+            context.status(200); // OK
+        } else {
+            context.json(""); // Empty response body
+            context.status(200); // OK
+        }
+        
+    }
 
 }
