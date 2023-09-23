@@ -165,5 +165,4 @@ public class SocialMediaController {
         context.json(getallMessages);
         context.status(200); // OK
     }
-
 }
