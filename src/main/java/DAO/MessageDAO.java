@@ -81,7 +81,7 @@ public class MessageDAO {
 
         PreparedStatement preparedStatement = connection.prepareStatement(sql);
         preparedStatement.setInt(1, id);
-
+        
         ResultSet rs = preparedStatement.executeQuery();
         while (rs.next()) {
             Message message = new Message(rs.getInt("message_id"), rs.getInt("posted_by"), 
@@ -92,7 +92,46 @@ public class MessageDAO {
     } catch (SQLException e) {
         System.out.println(e.getMessage());
     }
-
+   
     return null;
    }
+
+   
+   public Message deleteMessageById(int id) {
+    Connection connection = ConnectionUtil.getConnection();
+    try {
+           
+        String selectSql = "SELECT * FROM message WHERE message_id = ?";
+        String deleteSql = "DELETE FROM message WHERE message_id = ?";
+
+        // First, attempt to select the message to be deleted
+        PreparedStatement selectStatement = connection.prepareStatement(selectSql);
+        selectStatement.setInt(1, id);
+        ResultSet rs = selectStatement.executeQuery();
+
+        if (rs.next()) {
+            // Message with the specified ID exists; store it for later return
+            Message deletedMessage = new Message(
+                rs.getInt("message_id"),
+                rs.getInt("posted_by"),
+                rs.getString("message_text"),
+                rs.getLong("time_posted_epoch")
+            );
+
+            // Now, proceed to delete the message
+            PreparedStatement deleteStatement = connection.prepareStatement(deleteSql);
+            deleteStatement.setInt(1, id);
+            int rowsAffected = deleteStatement.executeUpdate();
+
+            if (rowsAffected > 0) {
+                // Message was deleted successfully
+                return deletedMessage;
+            }
+        }
+
+    } catch (SQLException e) {
+        System.out.println(e.getMessage());
+    }
+    return null; // Deletion was not successful
+}
 }

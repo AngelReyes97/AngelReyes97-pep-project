@@ -34,7 +34,8 @@ public class SocialMediaController {
         app.post("/login", this::userLogin);
         app.post("/messages", this::newMessage);
         app.get("/messages", this::getMessages);
-        app.get("messages/{message_id}", this::getOneMessage);
+        app.get("/messages/{message_id}", this::getOneMessage);
+        app.delete("/messages/{message_id}", this::deleteMessage);
 
         return app;
     }
@@ -116,12 +117,22 @@ public class SocialMediaController {
 
         if (message != null) {
             context.json(message);
-            context.status(200); // OK
         } else {
             context.json(""); // Empty response body
-            context.status(200); // OK
         }
-        
+        context.status(200); // OK
+    }
+    
+    private void deleteMessage(Context context) {
+        int messageId = Integer.parseInt(context.pathParam("message_id"));
+        Message deletedMessage = messageservice.deleteMessage(messageId);
+   
+        if (deletedMessage != null) {
+            context.json(deletedMessage); 
+        } else {
+            context.json(""); 
+        }
+        context.status(200); // OK (message not found)
     }
 
 }
