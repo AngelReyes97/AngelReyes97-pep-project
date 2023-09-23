@@ -6,6 +6,8 @@ import Model.Account;
 import Model.Message;
 import Service.AccountService;
 import Service.MessageService;
+
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -36,6 +38,8 @@ public class SocialMediaController {
         app.get("/messages", this::getMessages);
         app.get("/messages/{message_id}", this::getOneMessage);
         app.delete("/messages/{message_id}", this::deleteMessage);
+        app.patch("/messages/{message_id}", this::updateMessage);
+        app.get("/accounts/{account_id}/messages", this::getAllById);
 
         return app;
     }
@@ -133,6 +137,33 @@ public class SocialMediaController {
             context.json(""); 
         }
         context.status(200); // OK (message not found)
+    }
+
+    private void updateMessage(Context context) {
+        int messageId = Integer.parseInt(context.pathParam("message_id"));
+        Message updatmessage = context.bodyAsClass(Message.class);
+
+        if(messageservice.getMessageById(messageId) != null) {
+            if(!updatmessage.getMessage_text().isBlank() && updatmessage.getMessage_text().length() < 255) {
+                Message mes = messageservice.updateMessage(messageId, updatmessage.getMessage_text());
+                context.json(mes); 
+                context.status(200);
+            }
+            else {
+                context.status(400);
+            }
+        }
+        else {
+            context.status(400);
+        }
+        
+    }
+
+    private void getAllById(Context context) {
+        int accountId = Integer.parseInt(context.pathParam("account_id"));
+        List<Message> getallMessages = messageservice.getAllMessagesByAccountId(accountId);
+        context.json(getallMessages);
+        context.status(200); // OK
     }
 
 }
